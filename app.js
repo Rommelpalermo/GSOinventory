@@ -1,8 +1,19 @@
 lucide.createIcons();
 
+const appShell = document.getElementById('appShell');
+const loginScreen = document.getElementById('loginScreen');
+const defaultAdminPassword = 'dikoalam';
+const defaultStaffAccount = { name: 'Maria Santos', employeeId: 'GSO-2026-001', email: 'maria.santos@trimex.edu.ph', password: 'dikoalam' };
+let adminPassword = localStorage.getItem('gsoAdminPassword') || 'dikoalam';
+let staffAccounts = JSON.parse(localStorage.getItem('gsoStaffAccounts') || 'null') || [
+  defaultStaffAccount
+];
 const dashboardContent = document.querySelector('.content');
 const browseView = document.getElementById('browse');
 const requestView = document.getElementById('request');
+const purchaseOrdersView = document.getElementById('purchaseOrders');
+const reportsView = document.getElementById('reports');
+const staffAccountsView = document.getElementById('staffAccounts');
 const notificationsView = document.getElementById('notificationsPage');
 const historyView = document.getElementById('historyPage');
 const settingsView = document.getElementById('settingsPage');
@@ -19,6 +30,63 @@ const borrowingRecords = [
   { item: 'Wireless Microphone Set', icon: 'mic-vocal', status: 'pending', date: 'Requested today', dueDate: 'Pending approval' }
 ];
 
+function saveStaffAccounts() {
+  localStorage.setItem('gsoStaffAccounts', JSON.stringify(staffAccounts));
+}
+
+function startSession(account) {
+  const isStaff = account.role === 'staff';
+  document.body.classList.toggle('staff-session', isStaff);
+  document.querySelector('.nav-list').hidden = isStaff;
+  document.getElementById('topbarName').textContent = account.name;
+  document.getElementById('profileAvatar').textContent = account.name.charAt(0).toUpperCase();
+  document.querySelector('.profile small').textContent = isStaff ? 'Inventory Staff' : 'GSO Admin';
+  loginScreen.hidden = true;
+  appShell.hidden = false;
+  if (isStaff) showStaffAccounts();
+  else showDashboard();
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const loginForm = event.currentTarget;
+  const identity = document.getElementById('loginIdentity').value.trim().toLowerCase();
+  const password = document.getElementById('loginPassword').value;
+  try {
+    const response = await fetch('api.php?action=login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity, password })
+    });
+    const result = await response.json();
+    if (response.ok && result.ok) {
+      document.getElementById('loginError').hidden = true;
+      loginForm.reset();
+      startSession(result.user);
+      return;
+    }
+    document.getElementById('loginError').hidden = false;
+    return;
+  } catch {
+    // Opening index.html directly has no PHP server, so use the local demo credentials.
+  }
+  const isAdmin = identity === 'mhelpalermo90@gmail.com' && (password === adminPassword || password === defaultAdminPassword);
+  const staff = staffAccounts.find((account) => (account.email.toLowerCase() === identity || account.employeeId.toLowerCase() === identity) && account.password === password)
+    || ((identity === defaultStaffAccount.email || identity === defaultStaffAccount.employeeId.toLowerCase()) && password === defaultStaffAccount.password ? defaultStaffAccount : null);
+  if (!isAdmin && !staff) {
+    document.getElementById('loginError').hidden = false;
+    return;
+  }
+  document.getElementById('loginError').hidden = true;
+  loginForm.reset();
+  startSession(isAdmin ? { name: 'mhel palermo', role: 'admin' } : { ...staff, role: 'staff' });
+});
+document.getElementById('resetCredentials').addEventListener('click', () => {
+  localStorage.removeItem('gsoAdminPassword');
+  localStorage.removeItem('gsoStaffAccounts');
+  window.location.reload();
+});
+
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add('visible');
@@ -30,6 +98,9 @@ function showDashboard(scrollToBorrowings = false) {
   dashboardContent.hidden = false;
   browseView.hidden = true;
   requestView.hidden = true;
+  purchaseOrdersView.hidden = true;
+  reportsView.hidden = true;
+  staffAccountsView.hidden = true;
   notificationsView.hidden = true;
   historyView.hidden = true;
   settingsView.hidden = true;
@@ -41,6 +112,9 @@ function showBrowse() {
   dashboardContent.hidden = true;
   browseView.hidden = false;
   requestView.hidden = true;
+  purchaseOrdersView.hidden = true;
+  reportsView.hidden = true;
+  staffAccountsView.hidden = true;
   notificationsView.hidden = true;
   historyView.hidden = true;
   settingsView.hidden = true;
@@ -52,6 +126,9 @@ function showRequest() {
   dashboardContent.hidden = true;
   browseView.hidden = true;
   requestView.hidden = false;
+  purchaseOrdersView.hidden = true;
+  reportsView.hidden = true;
+  staffAccountsView.hidden = true;
   notificationsView.hidden = true;
   historyView.hidden = true;
   settingsView.hidden = true;
@@ -59,10 +136,83 @@ function showRequest() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+function showPurchaseOrders() {
+  dashboardContent.hidden = true;
+  browseView.hidden = true;
+  requestView.hidden = true;
+  purchaseOrdersView.hidden = false;
+  reportsView.hidden = true;
+  staffAccountsView.hidden = true;
+  notificationsView.hidden = true;
+  historyView.hidden = true;
+  settingsView.hidden = true;
+  borrowingsView.hidden = true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function formatReportCount(count) {
+  return `${count} record${count === 1 ? '' : 's'}`;
+}
+
+function renderReports() {
+  const purchaseRows = [...document.querySelectorAll('#purchaseOrderRows tr')];
+  const pendingBorrowings = borrowingRecords.filter((record) => record.status === 'pending');
+  const totalOrderValue = purchaseRows.reduce((total, row) => total + Number(row.cells[4].textContent.replace(/[^\d.]/g, '')), 0);
+  document.getElementById('reportBorrowingTotal').textContent = borrowingRecords.length;
+  document.getElementById('reportPendingBorrowings').textContent = pendingBorrowings.length;
+  document.getElementById('reportPurchaseOrderTotal').textContent = purchaseRows.length;
+  document.getElementById('reportOrderValue').textContent = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(totalOrderValue);
+  document.getElementById('reportBorrowingCaption').textContent = formatReportCount(borrowingRecords.length);
+  document.getElementById('reportPurchaseCaption').textContent = formatReportCount(purchaseRows.length);
+  document.getElementById('reportBorrowingRows').innerHTML = borrowingRecords.map((record) => `<tr><td>${record.item}</td><td>${record.date}</td><td><span class="report-status ${record.status}">${record.status}</span></td></tr>`).join('');
+  document.getElementById('reportPurchaseRows').innerHTML = purchaseRows.map((row) => `<tr><td>${row.cells[0].textContent}</td><td>${row.cells[2].textContent}</td><td>${row.cells[4].textContent}</td><td>${row.cells[5].textContent}</td></tr>`).join('');
+}
+
+function showReports() {
+  dashboardContent.hidden = true;
+  browseView.hidden = true;
+  requestView.hidden = true;
+  purchaseOrdersView.hidden = true;
+  reportsView.hidden = false;
+  staffAccountsView.hidden = true;
+  notificationsView.hidden = true;
+  historyView.hidden = true;
+  settingsView.hidden = true;
+  borrowingsView.hidden = true;
+  renderReports();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderStaffStock() {
+  const query = document.getElementById('staffStockSearch').value.toLowerCase();
+  const stockList = document.getElementById('staffStockList');
+  const stockItems = [...document.querySelectorAll('.equipment-card')].filter((card) => `${card.dataset.name} ${card.dataset.code}`.toLowerCase().includes(query));
+  stockList.innerHTML = stockItems.length ? stockItems.map((card) => `<article class="staff-stock-item"><span><i data-lucide="package"></i></span><div><strong>${card.querySelector('.equipment-title h3').textContent}</strong><small>${card.dataset.code} · ${card.querySelector('.location').childNodes[2].textContent.trim()}</small></div><b>${card.querySelector('.stock').textContent}</b></article>`).join('') : '<p class="empty-stock">No stock items match your search.</p>';
+  lucide.createIcons({ nodes: [stockList] });
+}
+
+function showStaffAccounts() {
+  dashboardContent.hidden = true;
+  browseView.hidden = true;
+  requestView.hidden = true;
+  purchaseOrdersView.hidden = true;
+  reportsView.hidden = true;
+  staffAccountsView.hidden = false;
+  notificationsView.hidden = true;
+  historyView.hidden = true;
+  settingsView.hidden = true;
+  borrowingsView.hidden = true;
+  renderStaffStock();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function showNotifications() {
   dashboardContent.hidden = true;
   browseView.hidden = true;
   requestView.hidden = true;
+  purchaseOrdersView.hidden = true;
+  reportsView.hidden = true;
+  staffAccountsView.hidden = true;
   notificationsView.hidden = false;
   historyView.hidden = true;
   settingsView.hidden = true;
@@ -78,6 +228,9 @@ function showHistory() {
   dashboardContent.hidden = true;
   browseView.hidden = true;
   requestView.hidden = true;
+  purchaseOrdersView.hidden = true;
+  reportsView.hidden = true;
+  staffAccountsView.hidden = true;
   notificationsView.hidden = true;
   historyView.hidden = false;
   settingsView.hidden = true;
@@ -89,6 +242,9 @@ function showSettings() {
   dashboardContent.hidden = true;
   browseView.hidden = true;
   requestView.hidden = true;
+  purchaseOrdersView.hidden = true;
+  reportsView.hidden = true;
+  staffAccountsView.hidden = true;
   notificationsView.hidden = true;
   historyView.hidden = true;
   settingsView.hidden = false;
@@ -100,6 +256,9 @@ function showBorrowings() {
   dashboardContent.hidden = true;
   browseView.hidden = true;
   requestView.hidden = true;
+  purchaseOrdersView.hidden = true;
+  reportsView.hidden = true;
+  staffAccountsView.hidden = true;
   notificationsView.hidden = true;
   historyView.hidden = true;
   settingsView.hidden = true;
@@ -167,6 +326,9 @@ document.querySelectorAll('.nav-item').forEach((item) => {
     activateNav(item);
     if (item.getAttribute('href') === '#browse') showBrowse();
     else if (item.getAttribute('href') === '#request') showRequest();
+    else if (item.getAttribute('href') === '#purchaseOrders') showPurchaseOrders();
+    else if (item.getAttribute('href') === '#reports') showReports();
+    else if (item.getAttribute('href') === '#staffAccounts') showStaffAccounts();
     else if (item.getAttribute('href') === '#notifications') showNotifications();
     else if (item.getAttribute('href') === '#history') showHistory();
     else if (item.getAttribute('href') === '#settings') showSettings();
@@ -184,6 +346,9 @@ document.querySelectorAll('.shortcut').forEach((shortcut) => {
     if (view === 'Browse Equipment') showBrowse();
     else if (view === 'My Borrowings') showBorrowings();
     else if (view === 'Request Equipment') showRequest();
+    else if (view === 'Purchase Orders') showPurchaseOrders();
+    else if (view === 'Reports') showReports();
+    else if (view === 'Staff Accounts') showStaffAccounts();
     else if (view === 'Notifications') showNotifications();
     else if (view === 'Borrowing History') showHistory();
     else if (view === 'Account Settings') showSettings();
@@ -191,7 +356,7 @@ document.querySelectorAll('.shortcut').forEach((shortcut) => {
   });
 });
 
-document.querySelectorAll('.borrow-button').forEach((button) => {
+function attachBorrowHandler(button) {
   button.addEventListener('click', () => {
     const stock = button.closest('.equipment-card').querySelector('.stock');
     const [available, total] = stock.textContent.match(/\d+/g).map(Number);
@@ -206,7 +371,89 @@ document.querySelectorAll('.borrow-button').forEach((button) => {
     addBorrowing(button.dataset.item, button.dataset.icon, 'Oct 01');
     showToast(`${button.dataset.item} added to your borrowings`);
   });
+}
+
+document.querySelectorAll('.borrow-button').forEach(attachBorrowHandler);
+
+const addItemForm = document.getElementById('addItemForm');
+document.getElementById('showAddItemForm').addEventListener('click', () => {
+  addItemForm.hidden = false;
+  document.getElementById('newItemName').focus();
 });
+document.getElementById('closeAddItemForm').addEventListener('click', () => {
+  addItemForm.hidden = true;
+});
+addItemForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const name = document.getElementById('newItemName').value.trim();
+  const code = document.getElementById('newItemCode').value.trim().toUpperCase();
+  const location = document.getElementById('newItemLocation').value.trim();
+  const condition = document.getElementById('newItemCondition').value;
+  const quantity = Number(document.getElementById('newItemQuantity').value);
+  const conditionLabel = condition.charAt(0).toUpperCase() + condition.slice(1);
+  const card = document.createElement('article');
+  card.className = 'equipment-card';
+  card.dataset.name = name;
+  card.dataset.code = code;
+  card.dataset.condition = condition;
+  card.innerHTML = `<div class="equipment-visual"><i data-lucide="package"></i></div><div class="equipment-info"><div class="equipment-title"><div><h3>${name}</h3><p>${code}</p></div><span>Available</span></div><p class="location"><i data-lucide="map-pin"></i> ${location}<b>${conditionLabel}</b></p><div class="equipment-footer"><span class="stock">${quantity}/${quantity} available</span><button class="borrow-button" data-item="${name}" data-icon="package">Borrow</button></div></div>`;
+  document.getElementById('equipmentGrid').prepend(card);
+  attachBorrowHandler(card.querySelector('.borrow-button'));
+  lucide.createIcons({ nodes: [card] });
+  availableCount.textContent = Number(availableCount.textContent) + quantity;
+  event.currentTarget.reset();
+  document.getElementById('newItemQuantity').value = 1;
+  addItemForm.hidden = true;
+  filterEquipment();
+  renderStaffStock();
+  showToast(`${name} added to the catalog`);
+});
+
+document.getElementById('staffAccountForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const name = document.getElementById('staffName').value.trim();
+  const employeeId = document.getElementById('staffEmployeeId').value.trim().toUpperCase();
+  const email = document.getElementById('staffEmail').value.trim();
+  const password = document.getElementById('staffPassword').value;
+  const accountExists = staffAccounts.some((account) => account.email.toLowerCase() === email.toLowerCase() || account.employeeId === employeeId);
+  if (accountExists) {
+    showToast('A staff account already uses that email or employee ID');
+    return;
+  }
+  staffAccounts.unshift({ name, employeeId, email, password });
+  saveStaffAccounts();
+  const row = document.createElement('tr');
+  row.innerHTML = `<td>${name}</td><td>${employeeId}</td><td>${email}</td><td><span class="staff-role">Inventory Staff</span></td>`;
+  document.getElementById('staffAccountRows').prepend(row);
+  event.currentTarget.reset();
+  showToast(`${name}'s staff account was created`);
+});
+
+document.getElementById('staffEncodeForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const name = document.getElementById('staffItemName').value.trim();
+  const code = document.getElementById('staffItemCode').value.trim().toUpperCase();
+  const location = document.getElementById('staffItemLocation').value.trim();
+  const condition = document.getElementById('staffItemCondition').value;
+  const quantity = Number(document.getElementById('staffItemQuantity').value);
+  const conditionLabel = condition.charAt(0).toUpperCase() + condition.slice(1);
+  const card = document.createElement('article');
+  card.className = 'equipment-card';
+  card.dataset.name = name;
+  card.dataset.code = code;
+  card.dataset.condition = condition;
+  card.innerHTML = `<div class="equipment-visual"><i data-lucide="package"></i></div><div class="equipment-info"><div class="equipment-title"><div><h3>${name}</h3><p>${code}</p></div><span>Available</span></div><p class="location"><i data-lucide="map-pin"></i> ${location}<b>${conditionLabel}</b></p><div class="equipment-footer"><span class="stock">${quantity}/${quantity} available</span><button class="borrow-button" data-item="${name}" data-icon="package">Borrow</button></div></div>`;
+  document.getElementById('equipmentGrid').prepend(card);
+  attachBorrowHandler(card.querySelector('.borrow-button'));
+  lucide.createIcons({ nodes: [card] });
+  availableCount.textContent = Number(availableCount.textContent) + quantity;
+  event.currentTarget.reset();
+  document.getElementById('staffItemQuantity').value = 1;
+  filterEquipment();
+  renderStaffStock();
+  showToast(`${name} saved to the inventory catalog`);
+});
+document.getElementById('staffStockSearch').addEventListener('input', renderStaffStock);
 
 function filterEquipment() {
   const query = document.getElementById('equipmentSearch').value.toLowerCase();
@@ -257,6 +504,25 @@ document.getElementById('borrowingRequestForm').addEventListener('submit', (even
   showDashboard(true);
   showToast(`${selected.item} request submitted and added to your borrowings`);
 });
+document.getElementById('purchaseOrderForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const supplier = document.getElementById('purchaseSupplier').value.trim();
+  const item = document.getElementById('purchaseItem').value.trim();
+  const quantity = Number(document.getElementById('purchaseQuantity').value);
+  const unitPrice = Number(document.getElementById('purchasePrice').value);
+  const rows = document.getElementById('purchaseOrderRows');
+  const orderNumber = `PO-2026-${String(rows.rows.length + 1).padStart(3, '0')}`;
+  const total = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(quantity * unitPrice);
+  const row = document.createElement('tr');
+  row.innerHTML = `<td>${orderNumber}</td><td>${supplier}</td><td>${item}</td><td>${quantity}</td><td>${total}</td><td><span class="purchase-status draft">Draft</span></td>`;
+  rows.prepend(row);
+  const orderCount = rows.rows.length;
+  document.getElementById('purchaseOrderCount').textContent = `${orderCount} order${orderCount === 1 ? '' : 's'}`;
+  event.currentTarget.reset();
+  document.getElementById('purchaseQuantity').value = 1;
+  showToast(`${orderNumber} created as a draft`);
+});
+document.getElementById('printReport').addEventListener('click', () => window.print());
 document.getElementById('notificationButton').addEventListener('click', () => {
   showNotifications();
 });
@@ -271,6 +537,20 @@ document.getElementById('historySearch').addEventListener('input', (event) => {
 });
 document.getElementById('profileForm').addEventListener('submit', (event) => {
   event.preventDefault();
+  const currentPassword = document.getElementById('currentAdminPassword').value;
+  const newPassword = document.getElementById('newAdminPassword').value;
+  const confirmedPassword = document.getElementById('confirmAdminPassword').value;
+  if (currentPassword || newPassword || confirmedPassword) {
+    if (currentPassword !== adminPassword || newPassword.length < 8 || newPassword !== confirmedPassword) {
+      showToast('Enter the correct current password and matching new password');
+      return;
+    }
+    adminPassword = newPassword;
+    localStorage.setItem('gsoAdminPassword', adminPassword);
+    document.getElementById('currentAdminPassword').value = '';
+    document.getElementById('newAdminPassword').value = '';
+    document.getElementById('confirmAdminPassword').value = '';
+  }
   const name = document.getElementById('settingsName').textContent;
   const initial = name.trim().charAt(0).toUpperCase();
   document.getElementById('topbarName').textContent = name;
@@ -281,4 +561,10 @@ document.getElementById('profileForm').addEventListener('submit', (event) => {
 document.querySelectorAll('.borrowing-tab').forEach((tab) => {
   tab.addEventListener('click', () => renderBorrowings(tab.dataset.status));
 });
-document.querySelector('.sign-out').addEventListener('click', () => showToast('Signed out successfully'));
+document.querySelector('.sign-out').addEventListener('click', () => {
+  appShell.hidden = true;
+  loginScreen.hidden = false;
+  document.body.classList.remove('staff-session');
+  document.querySelector('.nav-list').hidden = false;
+  document.getElementById('loginIdentity').focus();
+});

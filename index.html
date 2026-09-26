@@ -10,7 +10,19 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <section class="login-screen" id="loginScreen">
+      <form class="login-card" id="loginForm">
+        <span class="login-mark"><i data-lucide="box"></i></span>
+        <div><h1>GSO Equipment</h1><p>Trimex Colleges Inc.</p></div>
+        <label>Email or Employee ID<input id="loginIdentity" required autocomplete="username" placeholder="Enter your email or employee ID" /></label>
+        <label>Password<input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Enter your password" /></label>
+        <p class="login-error" id="loginError" hidden>Incorrect account details or password.</p>
+        <button type="submit"><i data-lucide="log-in"></i>Sign In</button>
+        <button class="reset-credentials" id="resetCredentials" type="button">Reset demo credentials</button>
+        <p class="login-hint">Admin: mhelpalermo90@gmail.com<br />Default password: dikoalam</p>
+      </form>
+    </section>
+    <div class="app-shell" id="appShell" hidden>
       <aside class="sidebar" id="sidebar">
         <div class="brand">
           <span class="brand-mark"><i data-lucide="box"></i></span>
@@ -21,6 +33,9 @@
           <a class="nav-item" href="#browse"><i data-lucide="search"></i>Browse Equipment</a>
           <a class="nav-item" href="#borrowings"><i data-lucide="clipboard-list"></i>My Borrowings</a>
           <a class="nav-item" href="#request"><i data-lucide="send"></i>Request Equipment</a>
+          <a class="nav-item" href="#purchaseOrders"><i data-lucide="shopping-cart"></i>Purchase Orders</a>
+          <a class="nav-item" href="#reports"><i data-lucide="chart-no-axes-combined"></i>Reports</a>
+          <a class="nav-item" href="#staffAccounts"><i data-lucide="users-round"></i>Staff Accounts</a>
           <a class="nav-item" href="#notifications"><i data-lucide="bell"></i>Notifications<span class="nav-badge" id="notificationBadge" hidden>0</span></a>
           <a class="nav-item" href="#history"><i data-lucide="history"></i>Borrowing History</a>
           <a class="nav-item" href="#settings"><i data-lucide="settings"></i>Account Settings</a>
@@ -56,6 +71,9 @@
             <button class="shortcut" data-view="Browse Equipment"><span class="quick-icon green"><i data-lucide="search"></i></span><span>Browse<br />Equipment</span></button>
             <button class="shortcut" data-view="My Borrowings"><span class="quick-icon blue"><i data-lucide="clipboard-list"></i></span><span>My Borrowings</span></button>
             <button class="shortcut" data-view="Request Equipment"><span class="quick-icon orange"><i data-lucide="send"></i></span><span>Request<br />Equipment</span></button>
+            <button class="shortcut" data-view="Purchase Orders"><span class="quick-icon blue"><i data-lucide="shopping-cart"></i></span><span>Purchase<br />Orders</span></button>
+            <button class="shortcut" data-view="Reports"><span class="quick-icon green"><i data-lucide="chart-no-axes-combined"></i></span><span>Reports</span></button>
+            <button class="shortcut" data-view="Staff Accounts"><span class="quick-icon gray"><i data-lucide="users-round"></i></span><span>Staff<br />Accounts</span></button>
             <button class="shortcut" data-view="Notifications"><span class="quick-icon red"><i data-lucide="bell"></i></span><span>Notifications</span></button>
             <button class="shortcut" data-view="Borrowing History"><span class="quick-icon purple"><i data-lucide="history"></i></span><span>Borrowing History</span></button>
             <button class="shortcut" data-view="Account Settings"><span class="quick-icon gray"><i data-lucide="settings"></i></span><span>Account Settings</span></button>
@@ -85,7 +103,19 @@
           <div class="catalog-toolbar">
             <label class="search-field"><i data-lucide="search"></i><input id="equipmentSearch" type="search" placeholder="Search by name or code..." /></label>
             <label class="filter-field"><i data-lucide="sliders-horizontal"></i><select id="equipmentFilter" aria-label="Filter equipment"><option value="all">All</option><option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option></select></label>
+            <button class="add-item-button" id="showAddItemForm" type="button"><i data-lucide="plus"></i>Add Item</button>
           </div>
+          <form class="add-item-form" id="addItemForm" hidden>
+            <div class="add-item-form-heading"><h3><i data-lucide="package-plus"></i>Add Equipment or Supply</h3><button class="close-add-item" id="closeAddItemForm" type="button" aria-label="Close add item form"><i data-lucide="x"></i></button></div>
+            <div class="add-item-fields">
+              <label>Item Name *<input id="newItemName" required placeholder="e.g., HDMI Cable" /></label>
+              <label>Item Code *<input id="newItemCode" required placeholder="e.g., CAB-0010" /></label>
+              <label>Location *<input id="newItemLocation" required placeholder="e.g., GSO Storage" /></label>
+              <label>Condition *<select id="newItemCondition" required><option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option></select></label>
+              <label>Quantity *<input id="newItemQuantity" type="number" min="1" value="1" required /></label>
+            </div>
+            <button class="save-item" type="submit"><i data-lucide="plus"></i>Add to Catalog</button>
+          </form>
           <div class="equipment-grid" id="equipmentGrid">
             <article class="equipment-card" data-name="Projector Epson" data-code="PRJ-0045" data-condition="excellent"><div class="equipment-visual"><i data-lucide="projector"></i></div><div class="equipment-info"><div class="equipment-title"><div><h3>Projector (Epson)</h3><p>PRJ-0045</p></div><span>Available</span></div><p class="location"><i data-lucide="map-pin"></i> GSO Room 102 <b>Excellent</b></p><div class="equipment-footer"><span class="stock">3/4 available</span><button class="borrow-button" data-item="Projector (Epson)" data-icon="projector">Borrow</button></div></div></article>
             <article class="equipment-card" data-name="Wireless Microphone Set" data-code="AUD-0012" data-condition="good"><div class="equipment-visual"><i data-lucide="mic-vocal"></i></div><div class="equipment-info"><div class="equipment-title"><div><h3>Wireless Microphone Set</h3><p>AUD-0012</p></div><span>Available</span></div><p class="location"><i data-lucide="map-pin"></i> GSO Room 201 <b>Good</b></p><div class="equipment-footer"><span class="stock">4/6 available</span><button class="borrow-button" data-item="Wireless Microphone Set" data-icon="mic-vocal">Borrow</button></div></div></article>
@@ -115,6 +145,76 @@
             <label>Purpose / Remarks<textarea id="requestPurpose" placeholder="Describe the purpose of borrowing..." required></textarea></label>
             <button class="submit-request" type="submit"><i data-lucide="send"></i>Submit Borrowing Request</button>
           </form>
+        </section>
+
+        <section class="purchase-orders-view" id="purchaseOrders" hidden>
+          <div class="purchase-orders-heading">
+            <div><h2>Purchase Orders</h2><p>Create and track equipment procurement orders</p></div>
+            <span class="order-count" id="purchaseOrderCount">1 order</span>
+          </div>
+          <form class="purchase-order-form" id="purchaseOrderForm">
+            <h3><i data-lucide="shopping-cart"></i>New Purchase Order</h3>
+            <div class="purchase-order-fields">
+              <label>Supplier *<input id="purchaseSupplier" required placeholder="e.g., Metro Office Supplies" /></label>
+              <label>Equipment / Item *<input id="purchaseItem" required placeholder="e.g., Wireless Presenter" /></label>
+              <label>Quantity *<input id="purchaseQuantity" type="number" min="1" value="1" required /></label>
+              <label>Unit Price (PHP) *<input id="purchasePrice" type="number" min="0" step="0.01" required placeholder="0.00" /></label>
+            </div>
+            <label>Remarks<textarea id="purchaseRemarks" placeholder="Add delivery details or procurement notes..."></textarea></label>
+            <button class="create-order" type="submit"><i data-lucide="plus"></i>Create Purchase Order</button>
+          </form>
+          <div class="purchase-orders-table-wrap">
+            <table class="purchase-orders-table">
+              <thead><tr><th>PO Number</th><th>Supplier</th><th>Item</th><th>Quantity</th><th>Total</th><th>Status</th></tr></thead>
+              <tbody id="purchaseOrderRows">
+                <tr><td>PO-2026-001</td><td>Trimex Technology Supply</td><td>Projector Lamp</td><td>2</td><td>PHP 12,500.00</td><td><span class="purchase-status pending">Pending</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="reports-view" id="reports" hidden>
+          <div class="reports-heading"><div><h2>Reports</h2><p>Borrowing and purchase-order activity summary</p></div><button class="print-report" id="printReport" type="button"><i data-lucide="printer"></i>Print Report</button></div>
+          <section class="report-stat-grid" aria-label="Report statistics">
+            <article class="report-stat"><span class="report-icon blue"><i data-lucide="clipboard-list"></i></span><div><p>Total Borrowings</p><strong id="reportBorrowingTotal">0</strong></div></article>
+            <article class="report-stat"><span class="report-icon orange"><i data-lucide="clock-3"></i></span><div><p>Pending Borrowings</p><strong id="reportPendingBorrowings">0</strong></div></article>
+            <article class="report-stat"><span class="report-icon green"><i data-lucide="shopping-cart"></i></span><div><p>Purchase Orders</p><strong id="reportPurchaseOrderTotal">0</strong></div></article>
+            <article class="report-stat"><span class="report-icon purple"><i data-lucide="wallet-cards"></i></span><div><p>Order Value</p><strong id="reportOrderValue">PHP 0.00</strong></div></article>
+          </section>
+          <div class="report-grid">
+            <article class="report-panel"><div class="report-panel-heading"><h3>Borrowing Report</h3><span id="reportBorrowingCaption">0 records</span></div><div class="report-table-wrap"><table class="report-table"><thead><tr><th>Equipment</th><th>Requested / Borrowed</th><th>Status</th></tr></thead><tbody id="reportBorrowingRows"></tbody></table></div></article>
+            <article class="report-panel"><div class="report-panel-heading"><h3>Purchase Order Report</h3><span id="reportPurchaseCaption">0 records</span></div><div class="report-table-wrap"><table class="report-table"><thead><tr><th>PO Number</th><th>Item</th><th>Total</th><th>Status</th></tr></thead><tbody id="reportPurchaseRows"></tbody></table></div></article>
+          </div>
+        </section>
+
+        <section class="staff-accounts-view" id="staffAccounts" hidden>
+          <div class="staff-heading"><div><h2>Staff Accounts</h2><p>Create staff accounts with inventory-only access</p></div><span class="staff-access"><i data-lucide="shield-check"></i>Encode items and check stock</span></div>
+          <div class="staff-admin-grid">
+            <form class="staff-account-form" id="staffAccountForm">
+              <h3><i data-lucide="user-plus"></i>Create Staff Account</h3>
+              <label>Full Name *<input id="staffName" required placeholder="e.g., Juan Dela Cruz" /></label>
+              <label>Employee ID *<input id="staffEmployeeId" required placeholder="e.g., GSO-2026-001" /></label>
+              <label>Email Address *<input id="staffEmail" type="email" required placeholder="staff@trimex.edu.ph" /></label>
+              <label>Temporary Password *<input id="staffPassword" type="password" minlength="8" required autocomplete="new-password" placeholder="At least 8 characters" /></label>
+              <button class="create-staff" type="submit"><i data-lucide="plus"></i>Create Staff Account</button>
+            </form>
+            <article class="staff-permission-card"><span class="permission-icon"><i data-lucide="lock-keyhole"></i></span><h3>Staff Access</h3><p>Staff accounts cannot process borrowing requests, purchase orders, reports, or account settings.</p><ul><li><i data-lucide="check"></i>Encode equipment and supplies</li><li><i data-lucide="check"></i>Check available stock</li></ul></article>
+          </div>
+          <div class="staff-table-wrap"><table class="staff-table"><thead><tr><th>Staff Member</th><th>Employee ID</th><th>Email</th><th>Access</th></tr></thead><tbody id="staffAccountRows"><tr><td>Maria Santos</td><td>GSO-2026-001</td><td>maria.santos@trimex.edu.ph</td><td><span class="staff-role">Inventory Staff</span></td></tr></tbody></table></div>
+          <section class="staff-workspace">
+            <div class="staff-workspace-heading"><div><p class="eyebrow">STAFF WORKSPACE</p><h3>Inventory Encoding and Stock Check</h3></div><span>Restricted staff functions</span></div>
+            <div class="staff-workspace-grid">
+              <form class="staff-encode-form" id="staffEncodeForm">
+                <h4><i data-lucide="file-pen-line"></i>Encode Item Information</h4>
+                <label>Item Name *<input id="staffItemName" required placeholder="e.g., HDMI Cable" /></label>
+                <label>Item Code *<input id="staffItemCode" required placeholder="e.g., CAB-0010" /></label>
+                <label>Location *<input id="staffItemLocation" required placeholder="e.g., GSO Storage" /></label>
+                <div class="staff-item-details"><label>Condition<select id="staffItemCondition"><option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option></select></label><label>Quantity *<input id="staffItemQuantity" type="number" min="1" value="1" required /></label></div>
+                <button class="encode-item" type="submit"><i data-lucide="save"></i>Save Item Information</button>
+              </form>
+              <div class="stock-check"><div class="stock-check-heading"><h4><i data-lucide="boxes"></i>Current Stock</h4><label><i data-lucide="search"></i><input id="staffStockSearch" type="search" placeholder="Search stock..." /></label></div><div class="staff-stock-list" id="staffStockList"></div></div>
+            </div>
+          </section>
         </section>
 
         <section class="notifications-view" id="notificationsPage" hidden>
@@ -156,6 +256,11 @@
               <label><span><i data-lucide="user-round"></i>Section</span><input id="profileSection" placeholder="e.g., 3A" /></label>
             </div>
             <label class="profile-program">Course / Program<input id="profileProgram" placeholder="e.g., BS Information Technology" /></label>
+            <div class="password-fields">
+              <label><span><i data-lucide="key-round"></i>Current Password</span><input id="currentAdminPassword" type="password" autocomplete="current-password" placeholder="Enter current password" /></label>
+              <label><span><i data-lucide="lock-keyhole"></i>New Password</span><input id="newAdminPassword" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" /></label>
+              <label><span><i data-lucide="lock-keyhole"></i>Confirm New Password</span><input id="confirmAdminPassword" type="password" minlength="8" autocomplete="new-password" placeholder="Re-enter new password" /></label>
+            </div>
             <button class="save-profile" type="submit"><i data-lucide="save"></i>Save Changes</button>
           </form>
         </section>
@@ -174,6 +279,6 @@
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
   </body>
 </html>
