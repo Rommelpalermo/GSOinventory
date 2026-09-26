@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GSO Equipment | Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <span class="brand-mark"><i data-lucide="box"></i></span>
+          <span><strong>GSO Equipment</strong><small>Trimex Colleges Inc.</small></span>
+        </div>
+        <nav class="nav-list" aria-label="Main navigation">
+          <a class="nav-item active" href="#dashboard"><i data-lucide="layout-dashboard"></i>Dashboard</a>
+          <a class="nav-item" href="#browse"><i data-lucide="search"></i>Browse Equipment</a>
+          <a class="nav-item" href="#borrowings"><i data-lucide="clipboard-list"></i>My Borrowings</a>
+          <a class="nav-item" href="#request"><i data-lucide="send"></i>Request Equipment</a>
+          <a class="nav-item" href="#notifications"><i data-lucide="bell"></i>Notifications<span class="nav-badge" id="notificationBadge" hidden>0</span></a>
+          <a class="nav-item" href="#history"><i data-lucide="history"></i>Borrowing History</a>
+          <a class="nav-item" href="#settings"><i data-lucide="settings"></i>Account Settings</a>
+        </nav>
+        <button class="sign-out" type="button"><i data-lucide="log-out"></i>Sign Out</button>
+      </aside>
+
+      <main class="main-content" id="dashboard">
+        <header class="topbar">
+          <button class="menu-toggle" id="menuToggle" aria-label="Open navigation"><i data-lucide="menu"></i></button>
+          <h1>Equipment Borrowing System</h1>
+          <div class="topbar-actions">
+            <button class="icon-button" id="notificationButton" aria-label="Show notifications"><i data-lucide="bell"></i><span class="notification-dot"></span></button>
+            <div class="profile"><span class="avatar" id="profileAvatar">M</span><span><strong id="topbarName">mhel palermo</strong><small>GSO Admin</small></span></div>
+          </div>
+        </header>
+
+        <section class="content">
+          <div class="intro">
+            <p class="eyebrow">DASHBOARD</p>
+            <h2>Welcome back, mhel</h2>
+            <p>Here's your equipment borrowing overview</p>
+          </div>
+
+          <section class="stat-grid" aria-label="Borrowing statistics">
+            <article class="stat-card"><div><p>Available Items</p><strong id="availableCount">33</strong></div><span class="stat-icon green"><i data-lucide="package"></i></span></article>
+            <article class="stat-card"><div><p>Active Borrowings</p><strong id="activeBorrowingCount">1</strong></div><span class="stat-icon blue"><i data-lucide="clipboard-list"></i></span></article>
+            <article class="stat-card"><div><p>Overdue Items</p><strong>0</strong></div><span class="stat-icon red"><i data-lucide="triangle-alert"></i></span></article>
+            <article class="stat-card"><div><p>Returned</p><strong>0</strong></div><span class="stat-icon green"><i data-lucide="circle-check"></i></span></article>
+          </section>
+
+          <section class="shortcut-grid" aria-label="Quick actions">
+            <button class="shortcut" data-view="Browse Equipment"><span class="quick-icon green"><i data-lucide="search"></i></span><span>Browse<br />Equipment</span></button>
+            <button class="shortcut" data-view="My Borrowings"><span class="quick-icon blue"><i data-lucide="clipboard-list"></i></span><span>My Borrowings</span></button>
+            <button class="shortcut" data-view="Request Equipment"><span class="quick-icon orange"><i data-lucide="send"></i></span><span>Request<br />Equipment</span></button>
+            <button class="shortcut" data-view="Notifications"><span class="quick-icon red"><i data-lucide="bell"></i></span><span>Notifications</span></button>
+            <button class="shortcut" data-view="Borrowing History"><span class="quick-icon purple"><i data-lucide="history"></i></span><span>Borrowing History</span></button>
+            <button class="shortcut" data-view="Account Settings"><span class="quick-icon gray"><i data-lucide="settings"></i></span><span>Account Settings</span></button>
+          </section>
+
+          <section class="lower-grid">
+            <article class="panel" id="borrowings">
+              <div class="panel-heading"><div><h3>My Current Borrowings</h3><p>Keep track of equipment currently in your care.</p></div><a href="#borrowings">View All <i data-lucide="arrow-right"></i></a></div>
+              <div id="borrowingList">
+                <div class="borrowing-item"><span class="item-icon"><i data-lucide="monitor"></i></span><div class="item-details"><strong>LCD Projector - EPSON EB-X06</strong><span>Borrowed Sep 21, 2026</span></div><span class="status">Due Sep 28</span></div>
+              </div>
+            </article>
+            <article class="panel" id="notifications">
+              <div class="panel-heading"><div><h3>Recent Notifications</h3><p>Updates related to your requests.</p></div><a href="#notifications">View All <i data-lucide="arrow-right"></i></a></div>
+              <div class="notification-item"><span class="notice-icon"><i data-lucide="circle-check"></i></span><div><strong>Request approved</strong><p>Your projector request has been approved.</p><small>Today, 9:41 AM</small></div></div>
+              <div class="notification-item"><span class="notice-icon muted"><i data-lucide="info"></i></span><div><strong>Return reminder</strong><p>Your current item is due in 5 days.</p><small>Yesterday</small></div></div>
+            </article>
+          </section>
+        </section>
+
+        <section class="browse-view" id="browse" hidden>
+          <div class="intro">
+            <p class="eyebrow">EQUIPMENT CATALOG</p>
+            <h2>Browse Equipment</h2>
+            <p>Search and find available equipment to borrow</p>
+          </div>
+          <div class="catalog-toolbar">
+            <label class="search-field"><i data-lucide="search"></i><input id="equipmentSearch" type="search" placeholder="Search by name or code..." /></label>
+            <label class="filter-field"><i data-lucide="sliders-horizontal"></i><select id="equipmentFilter" aria-label="Filter equipment"><option value="all">All</option><option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option></select></label>
+          </div>
+          <div class="equipment-grid" id="equipmentGrid">
+            <article class="equipment-card" data-name="Projector Epson" data-code="PRJ-0045" data-condition="excellent"><div class="equipment-visual"><i data-lucide="projector"></i></div><div class="equipment-info"><div class="equipment-title"><div><h3>Projector (Epson)</h3><p>PRJ-0045</p></div><span>Available</span></div><p class="location"><i data-lucide="map-pin"></i> GSO Room 102 <b>Excellent</b></p><div class="equipment-footer"><span class="stock">3/4 available</span><button class="borrow-button" data-item="Projector (Epson)" data-icon="projector">Borrow</button></div></div></article>
+            <article class="equipment-card" data-name="Wireless Microphone Set" data-code="AUD-0012" data-condition="good"><div class="equipment-visual"><i data-lucide="mic-vocal"></i></div><div class="equipment-info"><div class="equipment-title"><div><h3>Wireless Microphone Set</h3><p>AUD-0012</p></div><span>Available</span></div><p class="location"><i data-lucide="map-pin"></i> GSO Room 201 <b>Good</b></p><div class="equipment-footer"><span class="stock">4/6 available</span><button class="borrow-button" data-item="Wireless Microphone Set" data-icon="mic-vocal">Borrow</button></div></div></article>
+            <article class="equipment-card" data-name="Tripod Stand" data-code="TLS-00034" data-condition="good"><div class="equipment-visual"><i data-lucide="axis-3d"></i></div><div class="equipment-info"><div class="equipment-title"><div><h3>Tripod Stand</h3><p>TLS-00034</p></div><span>Available</span></div><p class="location"><i data-lucide="map-pin"></i> GSO Room 102 <b>Good</b></p><div class="equipment-footer"><span class="stock">6/8 available</span><button class="borrow-button" data-item="Tripod Stand" data-icon="axis-3d">Borrow</button></div></div></article>
+            <article class="equipment-card" data-name="Extension Cord 20m" data-code="TLS-0056" data-condition="fair"><div class="equipment-visual"><i data-lucide="cable"></i></div><div class="equipment-info"><div class="equipment-title"><div><h3>Extension Cord (20m)</h3><p>TLS-0056</p></div><span>Available</span></div><p class="location"><i data-lucide="map-pin"></i> GSO Storage <b>Fair</b></p><div class="equipment-footer"><span class="stock">7/10 available</span><button class="borrow-button" data-item="Extension Cord (20m)" data-icon="cable">Borrow</button></div></div></article>
+          </div>
+          <p class="empty-catalog" id="emptyCatalog" hidden>No equipment matches your search.</p>
+        </section>
+
+        <section class="request-view" id="request" hidden>
+          <form class="request-form" id="borrowingRequestForm">
+            <h2><i data-lucide="send"></i>Borrowing Request Form</h2>
+            <label>Equipment *
+              <select id="requestEquipment" required>
+                <option value="projector">Projector (Epson) (PRJ-00045) - 3 available</option>
+                <option value="microphone">Wireless Microphone Set (AUD-0012) - 4 available</option>
+                <option value="tripod">Tripod Stand (TLS-00034) - 6 available</option>
+                <option value="extension">Extension Cord (20m) (TLS-0056) - 7 available</option>
+              </select>
+            </label>
+            <div class="equipment-summary" id="equipmentSummary"><span>Category: <b>Projector</b></span><span>Condition: <b>Excellent</b></span><span>Location: <b>GSO Room 102</b></span><span>Available: <b>3</b></span></div>
+            <div class="request-dates">
+              <label>Borrow Date &amp; Time *<input id="borrowDate" type="datetime-local" required /></label>
+              <label>Expected Return Date *<input id="returnDate" type="datetime-local" required /></label>
+            </div>
+            <label class="quantity-field">Quantity<input id="requestQuantity" type="number" min="1" max="3" value="1" required /></label>
+            <label>Purpose / Remarks<textarea id="requestPurpose" placeholder="Describe the purpose of borrowing..." required></textarea></label>
+            <button class="submit-request" type="submit"><i data-lucide="send"></i>Submit Borrowing Request</button>
+          </form>
+        </section>
+
+        <section class="notifications-view" id="notificationsPage" hidden>
+          <div class="notifications-heading">
+            <h2>Notifications</h2>
+            <p id="unreadText">0 unread notifications</p>
+          </div>
+          <div class="notifications-list" id="notificationsList">
+            <p class="empty-notifications">You're all caught up.</p>
+          </div>
+        </section>
+
+        <section class="history-view" id="historyPage" hidden>
+          <div class="history-heading">
+            <h2>Borrowing History</h2>
+            <p>Complete log of all your borrowing transactions</p>
+          </div>
+          <label class="history-search"><i data-lucide="search"></i><input id="historySearch" type="search" placeholder="Search by equipment name or code..." /></label>
+          <div class="history-table-wrap">
+            <table class="history-table">
+              <thead><tr><th>Equipment</th><th>Code</th><th>Borrow Date</th><th>Due Date</th><th>Return Date</th><th>Status</th></tr></thead>
+              <tbody id="historyRows">
+                <tr data-search="wireless microphone set aud-00012"><td>Wireless Microphone Set</td><td>AUD-00012</td><td>May 19, 2026</td><td>May 19, 2026</td><td>&mdash;</td><td><span class="history-status pending">Pending</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="empty-history" id="emptyHistory" hidden>No borrowing transactions match your search.</p>
+        </section>
+
+        <section class="settings-view" id="settingsPage" hidden>
+          <div class="settings-heading"><h2>Account Settings</h2><p>Manage your profile information</p></div>
+          <div class="profile-banner"><div class="profile-initial" id="settingsInitial">M</div><div><h3 id="settingsName">mhel palermo</h3><p>GSO Admin &bull; <span id="settingsEmail">mhelpalermo90@gmail.com</span></p></div></div>
+          <form class="profile-form" id="profileForm">
+            <h3><i data-lucide="settings"></i>Profile Information</h3>
+            <div class="profile-fields">
+              <label><span><i data-lucide="graduation-cap"></i>Student / Employee ID</span><input id="profileId" placeholder="e.g., 2024-00123" /></label>
+              <label><span><i data-lucide="phone"></i>Contact Number</span><input id="profileContact" type="tel" placeholder="e.g., 0917 123 4567" /></label>
+              <label><span><i data-lucide="building-2"></i>Department</span><input id="profileDepartment" placeholder="e.g., BSIT" /></label>
+              <label><span><i data-lucide="user-round"></i>Section</span><input id="profileSection" placeholder="e.g., 3A" /></label>
+            </div>
+            <label class="profile-program">Course / Program<input id="profileProgram" placeholder="e.g., BS Information Technology" /></label>
+            <button class="save-profile" type="submit"><i data-lucide="save"></i>Save Changes</button>
+          </form>
+        </section>
+
+        <section class="borrowings-view" id="borrowingsPage" hidden>
+          <div class="borrowings-heading"><h2>My Borrowings</h2><p>Track and manage your equipment borrowings</p></div>
+          <div class="borrowing-tabs" role="tablist" aria-label="Borrowing status">
+            <button class="borrowing-tab active" type="button" data-status="active">Active <span id="activeTabCount">0</span></button>
+            <button class="borrowing-tab" type="button" data-status="pending">Pending <span id="pendingTabCount">1</span></button>
+            <button class="borrowing-tab" type="button" data-status="overdue">Overdue <span id="overdueTabCount">0</span></button>
+            <button class="borrowing-tab" type="button" data-status="completed">Completed <span id="completedTabCount">0</span></button>
+          </div>
+          <div class="borrowings-results" id="borrowingsResults"></div>
+        </section>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
