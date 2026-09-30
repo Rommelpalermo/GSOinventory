@@ -12,11 +12,11 @@
   <body>
     <section class="login-screen" id="loginScreen">
       <form class="login-card" id="loginForm">
-        <span class="login-mark"><i data-lucide="box"></i></span>
         <div><h1>GSO Equipment</h1><p>Trimex Colleges Inc.</p></div>
         <label>Email or Employee ID<input id="loginIdentity" required autocomplete="username" placeholder="Enter your email or employee ID" /></label>
         <label>Password<input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Enter your password" /></label>
         <p class="login-error" id="loginError" hidden>Incorrect account details or password.</p>
+        <p id="verificationNotice" hidden></p>
         <button type="submit"><i data-lucide="log-in"></i>Sign In</button>
         <button class="reset-credentials" id="resetCredentials" type="button">Reset demo credentials</button>
         <p class="login-hint">Admin: mhelpalermo90@gmail.com<br />Default password: dikoalam</p>
@@ -25,7 +25,6 @@
     <div class="app-shell" id="appShell" hidden>
       <aside class="sidebar" id="sidebar">
         <div class="brand">
-          <span class="brand-mark"><i data-lucide="box"></i></span>
           <span><strong>GSO Equipment</strong><small>Trimex Colleges Inc.</small></span>
         </div>
         <nav class="nav-list" aria-label="Main navigation">
@@ -108,11 +107,18 @@
           <form class="add-item-form" id="addItemForm" hidden>
             <div class="add-item-form-heading"><h3><i data-lucide="package-plus"></i>Add Equipment or Supply</h3><button class="close-add-item" id="closeAddItemForm" type="button" aria-label="Close add item form"><i data-lucide="x"></i></button></div>
             <div class="add-item-fields">
-              <label>Item Name *<input id="newItemName" required placeholder="e.g., HDMI Cable" /></label>
+              <label>Description *<input id="newItemName" required placeholder="e.g., HDMI Cable" /></label>
               <label>Item Code *<input id="newItemCode" required placeholder="e.g., CAB-0010" /></label>
+              <label>Unit *<input id="newItemUnit" required value="piece" placeholder="e.g., piece, box" /></label>
               <label>Location *<input id="newItemLocation" required placeholder="e.g., GSO Storage" /></label>
               <label>Condition *<select id="newItemCondition" required><option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option></select></label>
-              <label>Quantity *<input id="newItemQuantity" type="number" min="1" value="1" required /></label>
+              <label>Beginning Inventory *<input id="newItemBeginningInventory" type="number" min="0" value="0" required /></label>
+              <label>Reorder Level *<input id="newItemReorderLevel" type="number" min="0" value="0" required /></label>
+              <label>Reorder Quantity *<input id="newItemReorderQuantity" type="number" min="0" value="0" required /></label>
+              <label>Reorder Date<input id="newItemReorderDate" type="date" /></label>
+              <label>Total Reorder<input id="newItemTotalReorder" type="number" value="0" readonly /></label>
+              <label>Total Out<input id="newItemTotalOut" type="number" value="0" readonly /></label>
+              <label>Total Stock<input id="newItemTotalStock" type="number" value="0" readonly /></label>
             </div>
             <button class="save-item" type="submit"><i data-lucide="plus"></i>Add to Catalog</button>
           </form>
@@ -137,6 +143,7 @@
               </select>
             </label>
             <div class="equipment-summary" id="equipmentSummary"><span>Category: <b>Projector</b></span><span>Condition: <b>Excellent</b></span><span>Location: <b>GSO Room 102</b></span><span>Available: <b>3</b></span></div>
+            <label>Borrower Email *<input id="borrowerEmail" type="email" required autocomplete="email" placeholder="name@trimex.edu.ph" /></label>
             <div class="request-dates">
               <label>Borrow Date &amp; Time *<input id="borrowDate" type="datetime-local" required /></label>
               <label>Expected Return Date *<input id="returnDate" type="datetime-local" required /></label>

@@ -94,6 +94,28 @@ function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove('visible'), 2600);
 }
 
+async function verifyBorrowingFromEmail(token) {
+  const notice = document.getElementById('verificationNotice');
+  try {
+    const response = await fetch('api.php?action=verify-borrowing', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+    const result = await response.json();
+    notice.textContent = response.ok && result.ok
+      ? `${result.request.item} has been verified and is pending approval.`
+      : (result.message || 'Unable to verify this borrowing request.');
+  } catch {
+    notice.textContent = 'Unable to verify this borrowing request. Please try again.';
+  }
+  notice.hidden = false;
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+const verificationToken = new URLSearchParams(window.location.search).get('verify');
+if (verificationToken) verifyBorrowingFromEmail(verificationToken);
+
 function showDashboard(scrollToBorrowings = false) {
   dashboardContent.hidden = false;
   browseView.hidden = true;
@@ -376,6 +398,59 @@ function attachBorrowHandler(button) {
 document.querySelectorAll('.borrow-button').forEach(attachBorrowHandler);
 
 const addItemForm = document.getElementById('addItemForm');
+const beginningInventoryInput = document.getElementById('newItemBeginningInventory');
+const reorderQuantityInput = document.getElementById('newItemReorderQuantity');
+
+function updateInventoryTotals() {
+  const beginningInventory = Number(beginningInventoryInput.value) || 0;
+  const reorderQuantity = Number(reorderQuantityInput.value) || 0;
+  document.getElementById('newItemTotalReorder').value = reorderQuantity;
+  document.getElementById('newItemTotalOut').value = 0;
+  document.getElementById('newItemTotalStock').value = beginningInventory + reorderQuantity;
+}
+
+beginningInventoryInput.addEventListener('input', updateInventoryTotals);
+reorderQuantityInput.addEventListener('input', updateInventoryTotals);
+
+function createInventoryCard({ name, code, unit, location, condition, beginningInventory, reorderQuantity, totalStock }) {
+  const conditionLabel = condition.charAt(0).toUpperCase() + condition.slice(1);
+  const card = document.createElement('article');
+  card.className = 'equipment-card';
+  card.dataset.name = name;
+  card.dataset.code = code;
+  card.dataset.condition = condition;
+  card.innerHTML = `<div class="equipment-visual"><i data-lucide="package"></i></div><div class="equipment-info"><div class="equipment-title"><div><h3>${name}</h3><p>${code}</p></div><span>Available</span></div><p class="location"><i data-lucide="map-pin"></i> ${location}<b>${conditionLabel}</b></p><p class="inventory-details">Unit: ${unit} | Beginning: ${beginningInventory} | Reorder: ${reorderQuantity} | Out: 0</p><div class="equipment-footer"><span class="stock">${totalStock}/${totalStock} available</span><button class="borrow-button" data-item="${name}" data-icon="package">Borrow</button></div></div>`;
+  attachBorrowHandler(card.querySelector('.borrow-button'));
+  lucide.createIcons({ nodes: [card] });
+  return card;
+}
+
+async function loadInventoryItems() {
+  try {
+    const response = await fetch('api.php?action=items');
+    const result = await response.json();
+    if (!response.ok || !result.ok) return;
+    [...result.items].reverse().forEach((item) => {
+      const card = createInventoryCard({
+        name: item.item_name,
+        code: item.item_code,
+        unit: item.unit_name,
+        location: item.location_name,
+        condition: item.item_condition,
+        beginningInventory: item.beginning_inventory,
+        reorderQuantity: item.reorder_quantity,
+        totalStock: item.quantity_available
+      });
+      document.getElementById('equipmentGrid').prepend(card);
+      availableCount.textContent = Number(availableCount.textContent) + item.quantity_available;
+    });
+    filterEquipment();
+  } catch {
+    // The static catalog remains available if the local PHP server is offline.
+  }
+}
+
+loadInventoryItems();
 document.getElementById('showAddItemForm').addEventListener('click', () => {
   addItemForm.hidden = false;
   document.getElementById('newItemName').focus();
@@ -383,33 +458,49 @@ document.getElementById('showAddItemForm').addEventListener('click', () => {
 document.getElementById('closeAddItemForm').addEventListener('click', () => {
   addItemForm.hidden = true;
 });
-addItemForm.addEventListener('submit', (event) => {
+addItemForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const name = document.getElementById('newItemName').value.trim();
   const code = document.getElementById('newItemCode').value.trim().toUpperCase();
+  const unit = document.getElementById('newItemUnit').value.trim();
   const location = document.getElementById('newItemLocation').value.trim();
   const condition = document.getElementById('newItemCondition').value;
-  const quantity = Number(document.getElementById('newItemQuantity').value);
-  const conditionLabel = condition.charAt(0).toUpperCase() + condition.slice(1);
-  const card = document.createElement('article');
-  card.className = 'equipment-card';
-  card.dataset.name = name;
-  card.dataset.code = code;
-  card.dataset.condition = condition;
-  card.innerHTML = `<div class="equipment-visual"><i data-lucide="package"></i></div><div class="equipment-info"><div class="equipment-title"><div><h3>${name}</h3><p>${code}</p></div><span>Available</span></div><p class="location"><i data-lucide="map-pin"></i> ${location}<b>${conditionLabel}</b></p><div class="equipment-footer"><span class="stock">${quantity}/${quantity} available</span><button class="borrow-button" data-item="${name}" data-icon="package">Borrow</button></div></div>`;
+  const beginningInventory = Number(beginningInventoryInput.value);
+  const reorderLevel = Number(document.getElementById('newItemReorderLevel').value);
+  const reorderQuantity = Number(reorderQuantityInput.value);
+  const reorderDate = document.getElementById('newItemReorderDate').value;
+  const totalStock = Number(document.getElementById('newItemTotalStock').value);
+  try {
+    const response = await fetch('api.php?action=items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, code, unit, location, condition, beginningInventory, reorderLevel, reorderQuantity, reorderDate, quantity: totalStock })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) {
+      showToast(result.message || 'Unable to add the inventory item');
+      return;
+    }
+  } catch {
+    showToast('Unable to connect to the server. Please try again.');
+    return;
+  }
+  const card = createInventoryCard({ name, code, unit, location, condition, beginningInventory, reorderQuantity, totalStock });
   document.getElementById('equipmentGrid').prepend(card);
-  attachBorrowHandler(card.querySelector('.borrow-button'));
-  lucide.createIcons({ nodes: [card] });
-  availableCount.textContent = Number(availableCount.textContent) + quantity;
+  availableCount.textContent = Number(availableCount.textContent) + totalStock;
   event.currentTarget.reset();
-  document.getElementById('newItemQuantity').value = 1;
+  document.getElementById('newItemUnit').value = 'piece';
+  beginningInventoryInput.value = 0;
+  document.getElementById('newItemReorderLevel').value = 0;
+  reorderQuantityInput.value = 0;
+  updateInventoryTotals();
   addItemForm.hidden = true;
   filterEquipment();
   renderStaffStock();
   showToast(`${name} added to the catalog`);
 });
 
-document.getElementById('staffAccountForm').addEventListener('submit', (event) => {
+document.getElementById('staffAccountForm').addEventListener('submit', async (event) => {
   event.preventDefault();
   const name = document.getElementById('staffName').value.trim();
   const employeeId = document.getElementById('staffEmployeeId').value.trim().toUpperCase();
@@ -418,6 +509,21 @@ document.getElementById('staffAccountForm').addEventListener('submit', (event) =
   const accountExists = staffAccounts.some((account) => account.email.toLowerCase() === email.toLowerCase() || account.employeeId === employeeId);
   if (accountExists) {
     showToast('A staff account already uses that email or employee ID');
+    return;
+  }
+  try {
+    const response = await fetch('api.php?action=staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, employeeId, email, password })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) {
+      showToast(result.message || 'Unable to create the staff account');
+      return;
+    }
+  } catch {
+    showToast('Unable to connect to the server. Please try again.');
     return;
   }
   staffAccounts.unshift({ name, employeeId, email, password });
@@ -485,24 +591,35 @@ function updateRequestEquipment() {
 }
 
 requestEquipment.addEventListener('change', updateRequestEquipment);
-document.getElementById('borrowingRequestForm').addEventListener('submit', (event) => {
+document.getElementById('borrowingRequestForm').addEventListener('submit', async (event) => {
   event.preventDefault();
   const selected = requestItems[requestEquipment.value];
-  const returnDate = new Date(document.getElementById('returnDate').value);
-  const borrowDate = new Date(document.getElementById('borrowDate').value);
-  const dueDate = returnDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-  const historyBorrowDate = borrowDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-  const historyDueDate = returnDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
   const quantity = Number(document.getElementById('requestQuantity').value);
-  addBorrowing(quantity > 1 ? `${selected.item} (${quantity} units)` : selected.item, selected.icon, dueDate, 'pending');
-  availableCount.textContent = Number(availableCount.textContent) - quantity;
-  activeBorrowingCount.textContent = Number(activeBorrowingCount.textContent) + 1;
-  addHistoryEntry(quantity > 1 ? `${selected.item} (${quantity} units)` : selected.item, selected.code, historyBorrowDate, historyDueDate);
-  addNotification(selected.item);
-  event.currentTarget.reset();
-  updateRequestEquipment();
-  showDashboard(true);
-  showToast(`${selected.item} request submitted and added to your borrowings`);
+  try {
+    const response = await fetch('api.php?action=borrowing-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('borrowerEmail').value.trim(),
+        item: selected.item,
+        code: selected.code,
+        quantity,
+        purpose: document.getElementById('requestPurpose').value.trim(),
+        borrowAt: document.getElementById('borrowDate').value,
+        returnAt: document.getElementById('returnDate').value
+      })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) {
+      showToast(result.message || 'Unable to send the verification email');
+      return;
+    }
+    event.currentTarget.reset();
+    updateRequestEquipment();
+    showToast('Verification link sent. Confirm it from your email to continue.');
+  } catch {
+    showToast('Unable to connect to the server. Please try again.');
+  }
 });
 document.getElementById('purchaseOrderForm').addEventListener('submit', (event) => {
   event.preventDefault();
